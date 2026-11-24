@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.Editable
 import android.text.InputType
 import android.text.method.LinkMovementMethod
 import android.view.*

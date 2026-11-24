@@ -8,6 +8,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.view.GestureDetectorCompat
+import kotlin.math.abs
 
 /**
  * কাস্টম জুমযোগ্য গ্রিড ভিউ — এক্সেলের শিটের মত। যেকোন জায়গায় pinch-zoom করা যাবে।

@@ -5,10 +5,25 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.opencsv.CSVReader
 import com.opencsv.CSVWriter
-import java.io.*
-import org.apache.poi.ss.usermodel.*
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.DateUtil
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet as POISheet
+import org.apache.poi.ss.usermodel.Workbook as POIWorkbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFColor
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 /**
  * বড় বড় এক্সেল/সিএসভ ফাইল ইমপোর্ট এবং এক্সপোর্ট ম্যানেজার।
@@ -46,9 +61,11 @@ class ImportExportManager(val context: Context) {
                 bdxSheet.columnCount = maxCol.coerceAtLeast(26)
                 bdxSheet.rowCount = (maxRow + 1).coerceAtLeast(1000)
                 for (r in 0 until bdxSheet.rowCount) {
-                    val row = poiSheet.getRow(r) ?: continue
+                    val row: Row? = poiSheet.getRow(r)
+                    if (row == null) continue
                     for (c in 0 until bdxSheet.columnCount) {
-                        val cell = row.getCell(c) ?: continue
+                        val cell: Cell? = row.getCell(c)
+                        if (cell == null) continue
                         val cellValue = cellToString(cell)
                         if (cellValue.isNotEmpty()) {
                             bdxSheet.setCell(
@@ -102,7 +119,7 @@ class ImportExportManager(val context: Context) {
         val wb = XSSFWorkbook()
         try {
             for (sheet in workbook.sheets) {
-                val poiSheet = wb.createSheet(sheet.name)
+                val poiSheet: POISheet = wb.createSheet(sheet.name)
                 for (cell in sheet.cellList()) {
                     val row = poiSheet.createRow(cell.row)
                     val poiCell = row.createCell(cell.column)
@@ -176,9 +193,9 @@ class ImportExportManager(val context: Context) {
     /** একটি ফাইলের জন্য শেয়ারযোগ্য কনটেন্ট ইউরির তৈরি করা। */
     fun fileToUri(file: File): Uri = FileProvider.getUriForFile(context, AUTHORITY, file)
 
-    // ---------- প perguntou POI সেল থেকে বদু্যর occupée ----------
+    // ---------- POI সেল থেকে বৈশিষ্ট্য পাঠানো ----------
 
-    private fun cellToString(cell: org.apache.poi.ss.usermodel.Cell): String {
+    private fun cellToString(cell: Cell): String {
         return when (cell.cellType) {
             CellType.STRING -> cell.stringCellValue
             CellType.NUMERIC -> {
@@ -191,30 +208,30 @@ class ImportExportManager(val context: Context) {
         }
     }
 
-    private fun cellBackgroundColor(cell: org.apache.poi.ss.usermodel.Cell): Int {
+    private fun cellBackgroundColor(cell: Cell): Int {
         val fill = cell.cellStyle.fillForegroundColorColor
         return if (fill is XSSFColor) fill.argb else 0
     }
 
-    private fun cellTextColor(cell: org.apache.poi.ss.usermodel.Cell, poiWorkbook: Workbook): Int {
-        val font = cell.cellStyle.getFont(poiWorkbook)
+    private fun cellTextColor(cell: Cell, poiWorkbook: POIWorkbook): Int {
+        val font: Font = cell.cellStyle.getFont(poiWorkbook)
         val color = font.color
         return if (color is XSSFColor) color.argb else -16777216
     }
 
-    private fun cellFontBold(cell: org.apache.poi.ss.usermodel.Cell, poiWorkbook: Workbook): Boolean {
+    private fun cellFontBold(cell: Cell, poiWorkbook: POIWorkbook): Boolean {
         return cell.cellStyle.getFont(poiWorkbook).isBold
     }
 
-    private fun cellFontItalic(cell: org.apache.poi.ss.usermodel.Cell, poiWorkbook: Workbook): Boolean {
+    private fun cellFontItalic(cell: Cell, poiWorkbook: POIWorkbook): Boolean {
         return cell.cellStyle.getFont(poiWorkbook).isItalic
     }
 
-    private fun cellFontSize(cell: org.apache.poi.ss.usermodel.Cell, poiWorkbook: Workbook): Float {
+    private fun cellFontSize(cell: Cell, poiWorkbook: POIWorkbook): Float {
         return cell.cellStyle.getFont(poiWorkbook).fontHeightInPoints.toFloat()
     }
 
-    private fun cellAlignment(cell: org.apache.poi.ss.usermodel.Cell): Int {
+    private fun cellAlignment(cell: Cell): Int {
         return when (cell.cellStyle.alignment) {
             HorizontalAlignment.CENTER -> 1
             HorizontalAlignment.RIGHT -> 2
