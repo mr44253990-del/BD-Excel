@@ -281,9 +281,9 @@ class Parser(private val src: String, private val calc: Calculator) {
                     }
                 }
                 // plain cell reference
-                if (parseRef(word) == null) throw EvalException("unknown name '$word'")
+                val ref = parseRef(word) ?: throw EvalException("unknown name '$word'")
                 pos = end
-                return parseRef(word)!!
+                return calc.valueOf(ref.col, ref.row)
             }
         }
 

@@ -276,7 +276,8 @@ object XlsxCodec {
             sb.append("""<fill><patternFill patternType="none"/></fill>""")
             sb.append("""<fill><patternFill patternType="gray125"/></fill>""")
             for (st in fillOrder) {
-                sb.append("""<fill><patternFill patternType="solid"><fgColor rgb="${argb(st.fillColor!!)}"/><bgColor indexed="64"/></patternFill></fill>""")
+                val color = st.fillColor
+                if (color != null) sb.append("""<fill><patternFill patternType="solid"><fgColor rgb="${argb(color)}"/><bgColor indexed="64"/></patternFill></fill>""")
             }
             sb.append("</fills>")
             sb.append("""<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>""")
