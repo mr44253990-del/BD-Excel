@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BD Excel</string>
+    <string name="formula_hint">ফর্মুলা বা ভ্যালু লিখুন (যেমন: =SUM(A1:A10))</string>
+    <string name="sheet_default">শீট: Sheet1</string>
+    <string name="zoom">জুম</string>
+    <string name="action_new">নতুন</string>
+    <string name="action_open">খুলুন</string>
+    <string name="action_save">সেভ করুন</string>
+    <string name="export_xlsx">এক্সেল (.xlsx) হিসেবে এক্সপোর্ট করুন</string>
+    <string name="export_csv">সিএসভ (.csv) হিসেবে এক্সপোর্ট করুন</string>
+    <string name="export_image">শিটকে ছবি (পিএনজি) হিসেবে সেভ করুন</string>
+    <string name="action_add_sheet">নতুন শিট যোগ করুন</string>
+    <string name="action_clear">শিট পরিষ্কার করুন</string>
+    <string name="action_about">সহায়তা</string>
+    <string name="open_fail">ফাইল খুলা যায়নি</string>
+    <string name="import_fail">ইমপোর্ট ব্যর্থ</string>
+    <string name="export_fail">এক্সপোর্ট ব্যর্থ</string>
+    <string name="saved">সেভ করা হয়েছে</string>
+</resources>

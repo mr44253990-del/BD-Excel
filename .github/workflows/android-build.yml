@@ -1,0 +1,61 @@
+name: Android CI — BD Excel APK বিল্ড
+
+on:
+  push:
+    branches: [ "feature/bd-excel-android", "main" ]
+  pull_request:
+    branches: [ "feature/bd-excel-android", "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ১. রেপো চেকআউট
+      - name: রেপোস ই Check out কোড
+        uses: actions/checkout@v4
+
+      # ২. জেডকে সেট আপ (অ্যান্ড্রয়েড বিল্ডের জন্য)
+      - name: জেডকে ১৭ সেট আপ
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ৩. অ্যান্ড্রয়েড এসডিকে সেট আপ ও লাইসেন্স একসেপ্ট
+      - name: অ্যান্ড্রয়েড এসডিকে সেট আপ
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: "34.0.0"
+          target: "android-34"
+          ndk: "side-by-side"
+          cmake: "3.22.1"
+          extra-channels: tools
+          extra-licenses: |
+            android-sdk-preview-license
+            google-gdk-license
+
+      # ৪. গ্র্যাডল র‍্যাপার এক্সিকিউটেবল করা
+      - name: গ্র্যাডল র‍্যাপার এক্সিকিউটেবল করা
+        run: chmod +x ./gradlew
+
+      # ৫. ডিবাগ এপিকে বিল্ড (অটোমেটিক্যালি)
+      - name: ডিবাগ এপিকে বিল্ড করুন
+        run: ./gradlew assembleDebug --no-daemon
+
+      # ৬. এপিকে আর্টিফাক্ট হিসেবে আপলোড (ডাউনলোড করার জন্য)
+      - name: এপিকে আর্টিফাক্ট হিসেবে আপলোড করুন
+        uses: actions/upload-artifact@v4
+        with:
+          name: BD-Excel-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      # ৭. বিল্ড সারಾಂশ
+      - name: বিল্ড সারಾಂশ
+        run: |
+          echo "BD Excel ডিবাগ এপিকে বিল্ড সম্পন্ন।"
+          echo "আর্টিফাক্ট: BD-Excel-APK (app-debug.apk)"
+          echo "এই ওয়ার্কফ্লো পুশের পর অটোমেটিকালি চলে এবং এপিকে ফাইল আপলোড করে।"
