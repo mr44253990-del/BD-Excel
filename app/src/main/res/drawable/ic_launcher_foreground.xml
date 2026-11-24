@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- BD Excel: Excel-style white sheet on Bangladesh green, red sun in a corner -->
+    <path
+        android:fillColor="#006A4E"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#F42A41"
+        android:pathData="M30,34m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,28h34l10,10v42a4,4 0,0 1,-4 4H38a4,4 0,0 1,-4 -4V32a4,4 0,0 1,4 -4z" />
+    <path
+        android:fillColor="#006A4E"
+        android:pathData="M72,28l10,10H72z" />
+    <path
+        android:fillColor="#006A4E"
+        android:pathData="M44,42h22v4H44zM44,50h22v4H44zM44,58h14v4H44z" />
+    <path
+        android:fillColor="#F42A41"
+        android:pathData="M62,58l6,6 -6,6 -6,-6z" />
+</vector>

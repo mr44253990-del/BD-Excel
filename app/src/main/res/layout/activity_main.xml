@@ -1,116 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:background="#FFFFFF">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:title="@string/app_name"
-        app:titleTextColor="@color/white" />
+        android:layout_height="wrap_content">
 
-    <!-- ফর্মুলা বār -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/formulaBarLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        app:boxBackgroundMode="outline"
-        app:boxCornerRadiusTopStart="8dp"
-        app:boxCornerRadiusTopEnd="8dp"
-        app:boxCornerRadiusBottomStart="8dp"
-        app:boxCornerRadiusBottomEnd="8dp"
-        app:endIconMode="custom"
-        app:endIconDrawable="@drawable/ic_formula"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/formulaBar"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/formula_hint"
-            android:imeOptions="actionDone"
-            android:inputType="text"
-            android:maxLines="1"
-            android:padding="10dp"
-            android:textColor="@color/on_surface"
-            android:textColorHint="@color/outline" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/bd_green"
+            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- শিটের নাম -->
-    <TextView
-        android:id="@+id/sheetNameTv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="4dp"
-        android:text="@string/sheet_default"
-        android:textColor="@color/primary"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/formulaBarLayout"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <!-- জুম কন্ট্রোল -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/formatBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="4dp"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/formulaBarLayout"
-        app:layout_constraintStart_toEndOf="@id/sheetNameTv">
+        android:gravity="center_vertical"
+        android:padding="4dp"
+        android:background="#F4F6F5">
+
+        <ImageButton
+            android:id="@+id/btnUndo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_undo"
+            android:contentDescription="@string/undo" />
+
+        <ImageButton
+            android:id="@+id/btnRedo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_redo"
+            android:contentDescription="@string/redo" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/zoom"
-            android:textSize="12sp"
-            android:textColor="@color/on_surface" />
+            android:id="@+id/btnBold"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="B"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:textColor="#202124" />
 
-        <SeekBar
-            android:id="@+id/zoomSeek"
-            android:layout_width="160dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:max="100"
-            android:progress="50" />
+        <TextView
+            android:id="@+id/btnItalic"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="I"
+            android:textStyle="italic"
+            android:textSize="18sp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:textColor="#202124" />
+
+        <ImageView
+            android:id="@+id/btnTextColor"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_format_color_text"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Text color" />
+
+        <ImageView
+            android:id="@+id/btnFillColor"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_format_color_fill"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Fill color" />
+
+        <TextView
+            android:id="@+id/btnAlign"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="↦"
+            android:textSize="18sp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:textColor="#202124" />
+
+        <ImageButton
+            android:id="@+id/btnInsertRow"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_row_insert"
+            android:contentDescription="Insert row" />
+
+        <ImageButton
+            android:id="@+id/btnDeleteRow"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_row_delete"
+            android:contentDescription="Delete row" />
+
+        <ImageButton
+            android:id="@+id/btnInsertCol"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_col_insert"
+            android:contentDescription="Insert column" />
+
+        <ImageButton
+            android:id="@+id/btnDeleteCol"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_col_delete"
+            android:contentDescription="Delete column" />
     </LinearLayout>
 
-    <!-- জুমযোগ্য গ্রিড শিট ভিউ -->
-    <com.bdexcel.app.SheetView
-        android:id="@+id/sheetView"
-        android:layout_width="0dp"
+    <com.bdexcel.app.view.SpreadsheetView
+        android:id="@+id/grid"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="4dp"
-        app:layout_constraintTop_toBottomOf="@id/sheetNameTv"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_weight="1" />
 
-    <!-- ফ্লোটিং অ্যাকশন বাটন (নতুন সেল/শিট) -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAdd"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
-        app:backgroundTint="@color/accent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:tint="@color/white" />
+        android:orientation="vertical"
+        android:background="#FFFFFF">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp">
+
+            <TextView
+                android:id="@+id/cellRefView"
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="A1"
+                android:textStyle="bold"
+                android:textColor="@color/bd_green" />
+
+            <EditText
+                android:id="@+id/formulaEdit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Value or =SUM(A1:A5)"
+                android:inputType="text"
+                android:imeOptions="actionDone"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/sheetTabs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="4dp" />
+        </HorizontalScrollView>
+    </LinearLayout>
+</LinearLayout>

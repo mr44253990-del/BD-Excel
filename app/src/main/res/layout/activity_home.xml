@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FAFBFA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="@drawable/header_gradient">
+
+        <ImageView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_launcher_foreground"
+            android:background="@drawable/logo_circle"
+            android:contentDescription="BD Excel" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingLeft="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="আমার সব শিট এক জায়গায়"
+                android:textSize="12sp"
+                android:textColor="#D8F0E8" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/bnImport"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_import"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Import" />
+
+        <ImageButton
+            android:id="@+id/bnAbout"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_info"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="About" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="40dp"
+        android:text="এখনো কোনো শিট নেই।\nনিচের + বাটনে চেপে নতুন শিট শুরু করুন!"
+        android:textSize="16sp"
+        android:textColor="#5F6368"
+        android:visibility="gone" />
+
+    <ListView
+        android:id="@+id/docList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="#E0E0E0"
+        android:dividerHeight="1dp" />
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabNew"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="20dp"
+        android:src="@drawable/ic_add_doc"
+        android:backgroundTint="#006A4E"
+        android:contentDescription="New sheet" />
+</FrameLayout>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:background="@drawable/header_gradient">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📚 ফরমুলা লাইব্রেরি"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="১০০+ ফরমুলার বাংলা ব্যাখ্যা ও উদাহরণ — সার্চ করে খুঁজুন"
+            android:textSize="12sp"
+            android:textColor="#D8F0E8" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/searchBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="🔍 ফরমুলা খুঁজুন... (যেমন: SUM, date, যোগ)"
+        android:inputType="text"
+        android:padding="12dp"
+        android:background="#FFFFFF" />
+
+    <TextView
+        android:id="@+id/formulaCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingBottom="6dp"
+        android:textSize="12sp"
+        android:textColor="#5F6368" />
+
+    <ListView
+        android:id="@+id/formulaList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="#EEEEEE"
+        android:dividerHeight="1dp" />
+</LinearLayout>

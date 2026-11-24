@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#FF006A4E</color>
-    <color name="primary_dark">#FF004D35</color>
-    <color name="accent">#FFF42A2A</color>
-    <color name="surface">#FFFFFFFF</color>
-    <color name="surface_variant">#FFF5F5F5</color>
-    <color name="background">#FFFFFFFF</color>
-    <color name="on_surface">#FF1A1A1A</color>
-    <color name="on_background">#FF1A1A1A</color>
-    <color name="outline">#FFC4C4C4</color>
-    <color name="grid_line">#FFBDBDBD</color>
-    <color name="header_bg">#FFE8F5E9</color>
-    <color name="selected_cell">#FF64FFDA</color>
-    <color name="formula_bar_bg">#FFFFFFFF</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="black">#FF000000</color>
-    <color name="red">#FFFF0000</color>
-    <color name="green">#FF008000</color>
-    <color name="blue">#FF0000FF</color>
-    <color name="yellow">#FFFFFF00</color>
+    <color name="bd_green">#006A4E</color>
+    <color name="bd_red">#F42A41</color>
+    <color name="grid_line">#D8D8D8</color>
+    <color name="header_bg">#EEF2F0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 </resources>
