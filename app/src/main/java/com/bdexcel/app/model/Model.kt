@@ -22,9 +22,11 @@ data class CellStyle(
 
 class Cell(
     var raw: String = "",
-    var style: CellStyle = CellStyle()
+    var style: CellStyle = CellStyle(),
+    /** Optional image file name (stored inside the workbook folder). */
+    var image: String? = null
 ) {
-    val isEmpty: Boolean get() = raw.isBlank() && !style.bold && !style.italic && style.textColor == null && style.fillColor == null && style.align == CellStyle.ALIGN_AUTO
+    val isEmpty: Boolean get() = raw.isBlank() && image == null && !style.bold && !style.italic && style.textColor == null && style.fillColor == null && style.align == CellStyle.ALIGN_AUTO
 
     fun toJson(): JSONObject {
         val o = JSONObject()
@@ -34,6 +36,7 @@ class Cell(
         style.textColor?.let { o.put("tc", it) }
         style.fillColor?.let { o.put("fc", it) }
         if (style.align != CellStyle.ALIGN_AUTO) o.put("al", style.align)
+        image?.let { o.put("img", it) }
         return o
     }
 
@@ -45,6 +48,7 @@ class Cell(
             if (o.has("tc")) c.style.textColor = o.getInt("tc")
             if (o.has("fc")) c.style.fillColor = o.getInt("fc")
             c.style.align = o.optInt("al", CellStyle.ALIGN_AUTO)
+            if (o.has("img")) c.image = o.optString("img").ifBlank { null }
             return c
         }
     }
@@ -135,7 +139,7 @@ class Sheet(var name: String = "Sheet1") {
         val s = Sheet(name)
         s.rowCount = rowCount
         s.colCount = colCount
-        for ((k, c) in cells) s.cells[k] = Cell(c.raw, c.style.copyOf())
+        for ((k, c) in cells) s.cells[k] = Cell(c.raw, c.style.copyOf(), c.image)
         return s
     }
 }
@@ -143,6 +147,8 @@ class Sheet(var name: String = "Sheet1") {
 class Workbook {
     val sheets = ArrayList<Sheet>()
     var current: Int = 0
+    var name: String = "Untitled"
+    var modified: Long = System.currentTimeMillis()
 
     fun active(): Sheet = sheets.getOrElse(current) { sheets.firstOrNull() ?: Sheet().also { sheets.add(it) } }
 
@@ -150,6 +156,8 @@ class Workbook {
         val arr = JSONArray()
         for (s in sheets) arr.put(JSONObject(String(s.snapshot(), Charsets.UTF_8)))
         val root = JSONObject()
+        root.put("name", name)
+        root.put("modified", modified)
         root.put("sheets", arr)
         root.put("current", current)
         return root.toString().toByteArray(Charsets.UTF_8)
@@ -158,6 +166,8 @@ class Workbook {
     fun fromJson(data: ByteArray) {
         sheets.clear()
         val root = JSONObject(String(data, Charsets.UTF_8))
+        name = root.optString("name", "Untitled").ifBlank { "Untitled" }
+        modified = root.optLong("modified", System.currentTimeMillis())
         current = root.optInt("current", 0)
         val arr = root.optJSONArray("sheets") ?: JSONArray()
         for (i in 0 until arr.length()) {

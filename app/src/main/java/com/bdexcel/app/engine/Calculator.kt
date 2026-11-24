@@ -18,6 +18,7 @@ class EvalException(message: String) : Exception(message)
 private class Arg {
     var single: Value = Value.Empty
     var range: List<Value>? = null
+    var rangeRaw: List<String>? = null
 
     fun flatten(): List<Value> = range ?: listOf(single)
 }
@@ -75,6 +76,10 @@ class Calculator(private val sheet: Sheet) {
     fun invalidate() {
         cache.clear()
     }
+
+    /** Raw (unedited) text of a cell — used by criteria functions. */
+    internal fun rawAt(col: Int, row: Int): String =
+        sheet.cellOrNull(col, row)?.raw ?: ""
 }
 
 /**
@@ -96,7 +101,14 @@ class Parser(private val src: String, private val calc: Calculator) {
             "IFERROR", "ROUND", "ABS", "SQRT", "POWER", "MOD", "INT", "PRODUCT",
             "CONCAT", "CONCATENATE", "LEN", "LEFT", "RIGHT", "MID", "UPPER",
             "LOWER", "TRIM", "TODAY", "NOW", "PI", "MEDIAN", "STDEV", "RAND",
-            "AND", "OR", "NOT"
+            "AND", "OR", "NOT",
+            "SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN", "ATAN2", "LOG", "LN",
+            "LOG10", "EXP", "SIGN", "CEILING", "FLOOR", "TRUNC", "FACT",
+            "DEGREES", "RADIANS", "GCD", "LCM", "SUMPRODUCT", "STDEVP", "VAR",
+            "VARP", "LARGE", "SMALL", "RANK", "COUNTBLANK", "SUMIF", "COUNTIF",
+            "AVERAGEIF", "ISBLANK", "ISNUMBER", "ISTEXT", "ISERROR", "SUBSTITUTE",
+            "FIND", "SEARCH", "REPLACE", "REPT", "VALUE", "EXACT", "DATE", "YEAR",
+            "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "WEEKDAY", "DAYS"
         )
         private val CELL_RE = Regex("^([A-Za-z]+)([0-9]+)$")
     }
@@ -275,7 +287,7 @@ class Parser(private val src: String, private val calc: Calculator) {
                     while (p2 < src.length && src[p2].isWhitespace()) p2++
                     val second = readWordAt(p2)
                     if (second != null && parseRef(word) != null && parseRef(second.first) != null) {
-                        val values = rangeValues(word, second.first)
+                        val values = rangeValues(word, second.first).first
                         pos = second.second
                         return numValue(values)
                     }
@@ -312,19 +324,21 @@ class Parser(private val src: String, private val calc: Calculator) {
 
     private fun parseRef(word: String): Ref? = parseRefParts(word)
 
-    private fun rangeValues(a: String, b: String): List<Value> {
+    private fun rangeValues(a: String, b: String): Pair<List<Value>, List<String>> {
         val ra = parseRefParts(a) ?: throw EvalException("bad range '$a'")
         val rb = parseRefParts(b) ?: throw EvalException("bad range '$b'")
         val out = ArrayList<Value>()
+        val raws = ArrayList<String>()
         val r1 = minOf(ra.row, rb.row); val r2 = maxOf(ra.row, rb.row)
         val c1 = minOf(ra.col, rb.col); val c2 = maxOf(ra.col, rb.col)
         for (r in r1..r2) {
             for (c in c1..c2) {
                 guard()
                 out.add(calc.valueOf(c, r))
+                raws.add(calc.rawAt(c, r))
             }
         }
-        return out
+        return Pair(out, raws)
     }
 
     private fun numValue(values: List<Value>): Value {
@@ -362,7 +376,9 @@ class Parser(private val src: String, private val calc: Calculator) {
                 while (p < src.length && src[p].isWhitespace()) p++
                 val second = readWordAt(p)
                 if (second != null && parseRefParts(word.first) != null && parseRefParts(second.first) != null) {
-                    arg.range = rangeValues(word.first, second.first)
+                    val (values, raws) = rangeValues(word.first, second.first)
+                    arg.range = values
+                    arg.rangeRaw = raws
                     pos = second.second
                     return arg
                 }
@@ -463,8 +479,283 @@ class Parser(private val src: String, private val calc: Calculator) {
             "NOW" -> Value.Str(SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date()))
             "PI" -> Value.Num(Math.PI)
             "RAND" -> Value.Num(Math.random())
+            // math
+            "SIN" -> Value.Num(Math.sin(toNum(first())))
+            "COS" -> Value.Num(Math.cos(toNum(first())))
+            "TAN" -> Value.Num(Math.tan(toNum(first())))
+            "ASIN" -> Value.Num(Math.asin(toNum(first())))
+            "ACOS" -> Value.Num(Math.acos(toNum(first())))
+            "ATAN" -> Value.Num(Math.atan(toNum(first())))
+            "ATAN2" -> Value.Num(Math.atan2(toNum(first()), toNum(second())))
+            "LN" -> Value.Num(Math.log(toNum(first())))
+            "LOG10" -> Value.Num(Math.log10(toNum(first())))
+            "LOG" -> {
+                val b = if (args.size > 1 && args[1].single is Value.Num) toNum(second()) else 10.0
+                Value.Num(Math.log(toNum(first())) / Math.log(b))
+            }
+            "EXP" -> Value.Num(Math.exp(toNum(first())))
+            "SIGN" -> {
+                val d = toNum(first())
+                Value.Num(if (d > 0) 1.0 else if (d < 0) -1.0 else 0.0)
+            }
+            "CEILING" -> {
+                val d = toNum(first())
+                val sig = if (args.size > 1 && args[1].single is Value.Num) toNum(second()) else 1.0
+                if (sig == 0.0) Value.Num(0.0) else Value.Num(Math.ceil(d / sig) * sig)
+            }
+            "FLOOR" -> {
+                val d = toNum(first())
+                val sig = if (args.size > 1 && args[1].single is Value.Num) toNum(second()) else 1.0
+                if (sig == 0.0) Value.Num(0.0) else Value.Num(Math.floor(d / sig) * sig)
+            }
+            "TRUNC" -> {
+                val d = toNum(first())
+                val digits = if (args.size > 1) toNum(second()).toInt() else 0
+                val f = Math.pow(10.0, digits.toDouble())
+                Value.Num(kotlin.math.truncate(d * f) / f)
+            }
+            "FACT" -> {
+                val n = toNum(first()).toInt()
+                var acc = 1.0
+                for (i in 2..Math.abs(n)) acc *= i
+                Value.Num(acc)
+            }
+            "DEGREES" -> Value.Num(Math.toDegrees(toNum(first())))
+            "RADIANS" -> Value.Num(Math.toRadians(toNum(first())))
+            "GCD" -> {
+                var g = 0L
+                for (n in nums) g = gcd(g, Math.abs(n.toLong()))
+                Value.Num(g.toDouble())
+            }
+            "LCM" -> {
+                var l = 1L
+                for (n in nums) l = l / gcd(l, Math.abs(n.toLong())) * Math.abs(n.toLong())
+                Value.Num(l.toDouble())
+            }
+            "SUMPRODUCT" -> {
+                if (args.size < 2) Value.Err("needs two ranges")
+                else {
+                    val a = args[0].range ?: return Value.Err("first arg must be a range")
+                    val b = args[1].range ?: return Value.Err("second arg must be a range")
+                    if (a.size != b.size) Value.Err("ranges differ in size")
+                    else {
+                        var sum = 0.0
+                        for (i in a.indices) {
+                            val x = (a[i] as? Value.Num)?.d ?: 0.0
+                            val y = (b[i] as? Value.Num)?.d ?: 0.0
+                            sum += x * y
+                        }
+                        Value.Num(sum)
+                    }
+                }
+            }
+            // statistics
+            "STDEVP" -> {
+                if (nums.size < 1) Value.Err("empty")
+                else {
+                    val m = nums.average()
+                    Value.Num(Math.sqrt(nums.sumOf { (it - m) * (it - m) } / nums.size))
+                }
+            }
+            "VAR" -> {
+                if (nums.size < 2) Value.Err("sample too small")
+                else {
+                    val m = nums.average()
+                    Value.Num(nums.sumOf { (it - m) * (it - m) } / (nums.size - 1))
+                }
+            }
+            "VARP" -> {
+                if (nums.size < 1) Value.Err("empty")
+                else {
+                    val m = nums.average()
+                    Value.Num(nums.sumOf { (it - m) * (it - m) } / nums.size)
+                }
+            }
+            "LARGE" -> {
+                val k = toNum(second()).toInt()
+                val sorted = nums.sortedDescending()
+                if (k < 1 || k > sorted.size) Value.Err("k out of range") else Value.Num(sorted[k - 1])
+            }
+            "SMALL" -> {
+                val k = toNum(second()).toInt()
+                val sorted = nums.sorted()
+                if (k < 1 || k > sorted.size) Value.Err("k out of range") else Value.Num(sorted[k - 1])
+            }
+            "RANK" -> {
+                val v = toNum(first())
+                val list = args.getOrNull(1)?.range?.mapNotNull { (it as? Value.Num)?.d } ?: Value.Err("needs range")
+                if (list is Value.Err) list
+                else {
+                    val arr = list as List<Double>
+                    val sorted = arr.sortedDescending()
+                    val idx = sorted.indexOf(v)
+                    Value.Num((idx + 1).toDouble())
+                }
+            }
+            "COUNTBLANK" -> {
+                var count = 0
+                for (a in args) {
+                    val raws = a.rangeRaw
+                    if (raws != null) count += raws.count { it.isBlank() }
+                    else if (toStr(a.single).isEmpty()) count++
+                }
+                Value.Num(count.toDouble())
+            }
+            "SUMIF" -> criteria(args) { v, _, acc -> if (v != null) acc + v else acc }
+            "COUNTIF" -> criteria(args) { v, _, count -> if (v != null) count + 1.0 else count }
+            "AVERAGEIF" -> {
+                val matched = ArrayList<Double>()
+                criteriaRaw(args) { raw, numeric -> if (matchesCriteria(raw, numeric, toStr(second()))) matched.add(numeric ?: 0.0) }
+                if (matched.isEmpty()) Value.Num(0.0) else Value.Num(matched.average())
+            }
+            // info
+            "ISBLANK" -> Value.Num(if (toStr(first()).isEmpty()) 1.0 else 0.0)
+            "ISNUMBER" -> Value.Num(if (first() is Value.Num) 1.0 else 0.0)
+            "ISTEXT" -> Value.Num(if (first() is Value.Str) 1.0 else 0.0)
+            "ISERROR" -> Value.Num(if (first() is Value.Err) 1.0 else 0.0)
+            // text
+            "SUBSTITUTE" -> {
+                val text = toStr(first()); val old = toStr(second()); val newS = toStr(third())
+                if (old.isEmpty()) Value.Str(text) else Value.Str(text.replace(old, newS))
+            }
+            "FIND", "SEARCH" -> {
+                val needle = toStr(first()); val hay = toStr(second())
+                val startIdx = if (args.size > 2) toNum(third()).toInt() - 1 else 0
+                val hayL = if (name == "SEARCH") hay.lowercase() else hay
+                val needleL = if (name == "SEARCH") needle.lowercase() else needle
+                val idx = if (startIdx < 0 || startIdx >= hay.length) -1 else hayL.indexOf(needleL, startIdx)
+                if (idx < 0) Value.Err("not found") else Value.Num((idx + 1).toDouble())
+            }
+            "REPLACE" -> {
+                val text = toStr(first())
+                val start = toNum(second()).toInt() - 1
+                val length = toNum(third()).toInt()
+                val newS = if (args.size > 3) toStr(args[3].single) else ""
+                if (start < 0) Value.Str(newS + text)
+                else Value.Str(text.substring(0, Math.min(start, text.length)) + newS + text.substring(Math.min(start + Math.max(length, 0), text.length)))
+            }
+            "REPT" -> {
+                val text = toStr(first()); val n = toNum(second()).toInt().coerceIn(0, 10000)
+                Value.Str(text.repeat(n))
+            }
+            "VALUE" -> {
+                val t = toStr(first()).trim()
+                val d = t.toDoubleOrNull() ?: Value.Err("not a number")
+                if (d is Value.Num) d else Value.Err("not a number")
+            }
+            "EXACT" -> Value.Num(if (toStr(first()) == toStr(second())) 1.0 else 0.0)
+            // date & time (ISO yyyy-MM-dd / yyyy-MM-dd HH:mm)
+            "DATE" -> {
+                val y = toNum(first()).toInt(); val m = toNum(second()).toInt(); val d = toNum(third()).toInt()
+                val cal = java.util.Calendar.getInstance()
+                cal.set(y, m - 1, d, 0, 0, 0)
+                Value.Str(java.text.SimpleDateFormat("yyyy-MM-dd").format(cal.time))
+            }
+            "YEAR" -> Value.Num(dateField(first(), java.util.Calendar.YEAR).toDouble())
+            "MONTH" -> Value.Num((dateField(first(), java.util.Calendar.MONTH) + 1).toDouble())
+            "DAY" -> Value.Num(dateField(first(), java.util.Calendar.DAY_OF_MONTH).toDouble())
+            "HOUR" -> Value.Num(timeField(first(), java.util.Calendar.HOUR_OF_DAY).toDouble())
+            "MINUTE" -> Value.Num(timeField(first(), java.util.Calendar.MINUTE).toDouble())
+            "SECOND" -> Value.Num(timeField(first(), java.util.Calendar.SECOND).toDouble())
+            "WEEKDAY" -> {
+                val d = parseDateOrTime(toStr(first()))
+                if (d == null) Value.Err("bad date")
+                else {
+                    val cal = java.util.Calendar.getInstance()
+                    cal.time = d
+                    val dow = cal.get(java.util.Calendar.DAY_OF_WEEK) // 1=Sunday
+                    Value.Num(dow.toDouble())
+                }
+            }
+            "DAYS" -> {
+                val e = parseDateOrTime(toStr(first()))
+                val s2 = parseDateOrTime(toStr(second()))
+                if (e == null || s2 == null) Value.Err("bad date")
+                else Value.Num(((e.time - s2.time) / 86400000.0))
+            }
             else -> Value.Err("unknown function $name")
         }
+    }
+
+    private fun gcd(a: Long, b: Long): Long = if (b == 0L) a else gcd(b, a % b)
+
+    /** Generic criteria accumulation: [transform] receives per-cell numeric value (null if non-numeric). */
+    private fun criteria(
+        args: List<Arg>,
+        transform: (Double?, List<String>, Double) -> Double
+    ): Value {
+        var acc = 0.0
+        criteriaRaw(args) { _, num -> acc = transform(num, emptyList(), acc) }
+        return Value.Num(acc)
+    }
+
+    /** Iterates the first range argument against the criteria in the second argument. */
+    private fun criteriaRaw(args: List<Arg>, visit: (String, Double?) -> Unit) {
+        val range = args.getOrNull(0)?.range ?: return
+        val raws = args.getOrNull(0)?.rangeRaw ?: List(range.size) { "" }
+        val crit = args.getOrNull(1)?.let { toStr(it.single) } ?: ""
+        for (i in range.indices) {
+            val numeric = (range[i] as? Value.Num)?.d
+            if (matchesCriteria(raws.getOrElse(i) { "" }, numeric, crit)) {
+                visit(raws.getOrElse(i) { "" }, numeric)
+            }
+        }
+    }
+
+    /** Supports "=5", ">3", "<=2", "<>x", plain text and * / ? wildcards. */
+    private fun matchesCriteria(raw: String, numeric: Double?, criteria: String): Boolean {
+        val c = criteria.trim()
+        if (c.isEmpty()) return raw.isBlank()
+        val opMatch = Regex("^(>=|<=|<>|=|<|>)(.*)$").find(c)
+        if (opMatch != null) {
+            val op = opMatch.groupValues[1]
+            val rest = opMatch.groupValues[2].trim()
+            val num = rest.toDoubleOrNull()
+            if (num != null && numeric != null) {
+                return when (op) {
+                    "=" -> numeric == num; "<>" -> numeric != num
+                    ">" -> numeric > num; "<" -> numeric < num
+                    ">=" -> numeric >= num; else -> numeric <= num
+                }
+            }
+            val rv = raw.trim()
+            return when (op) {
+                "=" -> rv.equals(rest, ignoreCase = true)
+                "<>" -> !rv.equals(rest, ignoreCase = true)
+                else -> false
+            }
+        }
+        if (raw.isBlank()) return false
+        if (c.contains('*') || c.contains('?')) {
+            val regex = Regex("^" + Regex.escape(c).replace("\\*", ".*").replace("\\?", ".") + "$", RegexOption.IGNORE_CASE)
+            return regex.matches(raw.trim())
+        }
+        return raw.trim().equals(c, ignoreCase = true)
+    }
+
+    private fun parseDateOrTime(text: String): java.util.Date? {
+        val t = text.trim()
+        for (pattern in listOf("yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd")) {
+            try {
+                return java.text.SimpleDateFormat(pattern).parse(t) ?: continue
+            } catch (e: Exception) {
+            }
+        }
+        return null
+    }
+
+    private fun dateField(v: Value, field: Int): Int {
+        val d = parseDateOrTime(toStr(v)) ?: return 0
+        val cal = java.util.Calendar.getInstance()
+        cal.time = d
+        return cal.get(field)
+    }
+
+    private fun timeField(v: Value, field: Int): Int {
+        val d = parseDateOrTime(toStr(v)) ?: return 0
+        val cal = java.util.Calendar.getInstance()
+        cal.time = d
+        return cal.get(field)
     }
 
     private fun truthy(v: Value): Boolean = when (v) {

@@ -25,6 +25,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.bdexcel.app.io.CsvCodec
+import com.bdexcel.app.io.Docs
+import com.bdexcel.app.io.PdfCodec
 import com.bdexcel.app.io.XlsxCodec
 import com.bdexcel.app.model.CellRef
 import com.bdexcel.app.model.CellStyle
@@ -34,8 +36,15 @@ import com.bdexcel.app.view.SpreadsheetView
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import androidx.core.content.FileProvider
 
 class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
+
+    companion object {
+        const val EXTRA_DIR = "dir"
+    }
 
     private lateinit var grid: SpreadsheetView
     private lateinit var formulaEdit: EditText
@@ -56,8 +65,8 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
     )
     private var pendingColorTargetIsText = true
 
-    private val projectFile: File
-        get() = File(filesDir, "project.json")
+    private lateinit var docDir: File
+    private var selectionAtLongPress: Pair<Int, Int> = Pair(0, 0)
 
     // ------------------------- activity results -------------------------
 
@@ -86,6 +95,16 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
             if (uri != null) exportPngTo(uri)
         }
 
+    private val exportPdfLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+            if (uri != null) exportPdfTo(uri)
+        }
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) insertImageAt(uri, selectionAtLongPress.first, selectionAtLongPress.second)
+        }
+
     // ------------------------- lifecycle -------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,10 +121,13 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
         sheetTabs = findViewById(R.id.sheetTabs)
         grid.listener = this
 
+        docDir = intent.getStringExtra(EXTRA_DIR)?.let { File(it) } ?: Docs.create(this)
         loadProject()
         if (workbook.sheets.isEmpty()) workbook.sheets.add(Sheet("Sheet1"))
         workbook.current = workbook.current.coerceIn(0, workbook.sheets.size - 1)
+        grid.imageDir = Docs.imagesDir(docDir)
         grid.sheet = workbook.active()
+        supportActionBar?.title = "📓 " + workbook.name
 
         wireFormatBar()
         wireFormulaEditor()
@@ -132,7 +154,7 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
     }
 
     override fun onPause() {
-        saveProjectLocally()
+        Docs.writeWorkbook(docDir, workbook)
         super.onPause()
     }
 
@@ -140,18 +162,14 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
 
     private fun loadProject() {
         try {
-            if (projectFile.exists()) workbook.fromJson(projectFile.readBytes())
+            workbook.fromJson(Docs.projectFile(docDir).readBytes())
         } catch (e: Exception) {
-            Toast.makeText(this, "Could not load saved workbook", Toast.LENGTH_SHORT).show()
+            // new document
         }
     }
 
-    private fun saveProjectLocally() {
-        try {
-            projectFile.writeBytes(workbook.toJson())
-        } catch (e: Exception) {
-            // storage full — ignore
-        }
+    private fun saveNow() {
+        Docs.writeWorkbook(docDir, workbook)
     }
 
     // ------------------------- menu -------------------------
@@ -167,6 +185,12 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
         menu.add(0, 8, 7, "Zoom reset").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(0, 9, 8, "About").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(0, 10, 9, "Save as image (PNG)").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 11, 10, "Export PDF").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 12, 11, "Rename workbook").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 13, 12, "Share XLSX").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 14, 13, "Share CSV").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 15, 14, "Share PDF").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 16, 15, "Formula library (100+)").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         return true
     }
 
@@ -182,6 +206,12 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
             8 -> grid.zoomTo(1f)
             9 -> showAbout()
             10 -> exportPngLauncher.launch("bdexcel_${XlsxCodec.timestamp()}.png")
+            11 -> exportPdfLauncher.launch("${workbook.name.take(24).ifBlank { "bdexcel" }}_${XlsxCodec.timestamp()}.pdf")
+            12 -> renameWorkbook()
+            13 -> shareFile("xlsx")
+            14 -> shareFile("csv")
+            15 -> shareFile("pdf")
+            16 -> startActivity(Intent(this, FormulaLibraryActivity::class.java))
         }
         return super.onOptionsItemSelected(item)
     }
@@ -205,9 +235,32 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
 
     private fun showAbout() {
         AlertDialog.Builder(this)
-            .setTitle("BD Excel 1.0")
-            .setMessage("A spreadsheet built for Bangladesh 🇧🇩\n\n• Formulas, formatting, colors\n• CSV & XLSX import/export\n• Pinch zoom, smooth scrolling\n• Offline & private")
+            .setTitle("BD Excel 🇧🇩")
+            .setMessage("ডেভেলপার: রাকিবুল\n\nআমি অ্যাপ্লিকেশন ডেভেলপ করতে ভালোবাসি ❤️\n\nBD Excel — বাংলাদেশের জন্য তৈরি একটি সম্পূর্ণ অফলাইন স্প্রেডশিট অ্যাপ।\n\n• ১০০+ এক্সেল ফর্মুলা\n• XLSX / CSV / PDF / PNG ইমপোর্ট-এক্সপোর্ট\n• ছবি সেলে যোগ করা যায়\n• পিঞ্চ-জুম, স্মুথ স্ক্রলিং\n• আপনার সব ডেটা ১০০% প্রাইভেট, অফলাইনেই থাকে")
             .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun renameWorkbook() {
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        input.setText(workbook.name)
+        val container = FrameLayout(this)
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        container.setPadding(pad, pad, pad, pad)
+        container.addView(input)
+        AlertDialog.Builder(this)
+            .setTitle("Rename workbook")
+            .setView(container)
+            .setPositiveButton("OK") { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    workbook.name = name
+                    supportActionBar?.title = "📓 $name"
+                    saveNow()
+                }
+            }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -259,9 +312,102 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
             contentResolver.openOutputStream(uri, "w")?.use { out ->
                 grid.captureBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
             }
-            Toast.makeText(this, "Image saved as PNG", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "ছবি PNG হিসেবে সেভ হয়েছে", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Image save failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun exportPdfTo(uri: Uri) {
+        try {
+            contentResolver.openOutputStream(uri, "w")?.use { out ->
+                PdfCodec.write(workbook.active(), out)
+            }
+            Toast.makeText(this, "PDF তৈরি হয়েছে", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "PDF save failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** Writes the chosen export format to the shared cache folder and fires a share intent. */
+    private fun shareFile(kind: String) {
+        try {
+            val safeName = workbook.name.replace(Regex("[^A-Za-z0-9_-]"), "_").ifBlank { "BDExcel" }
+            val ext = when (kind) { "csv" -> "csv"; "pdf" -> "pdf"; else -> "xlsx" }
+            val mime = when (kind) {
+                "csv" -> "text/csv"
+                "pdf" -> "application/pdf"
+                else -> XlsxCodec.mimeTypeFor("a.xlsx")
+            }
+            val dir = File(cacheDir, "share").apply { mkdirs() }
+            val sharedFile = File(dir, "${safeName}_${XlsxCodec.timestamp()}.$ext")
+            FileOutputStream(sharedFile).use { out ->
+                when (kind) {
+                    "csv" -> CsvCodec.write(workbook.active(), out)
+                    "pdf" -> PdfCodec.write(workbook.active(), out)
+                    else -> XlsxCodec.write(workbook, out)
+                }
+            }
+            val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", sharedFile)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = mime
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(send, "BD Excel শেয়ার করুন"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Share failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // ------------------------- cell images -------------------------
+
+    override fun onCellLongPress(col: Int, row: Int) {
+        selectionAtLongPress = Pair(col, row)
+        val cell = workbook.active().cell(col, row)
+        val options = if (cell.image != null) {
+            arrayOf("📷 ছবি বদলান", "🗑 ছবি মুছুন", "🧹 সেল খালি করুন")
+        } else {
+            arrayOf("📷 ছবি যোগ করুন", "🧹 সেল খালি করুন")
+        }
+        AlertDialog.Builder(this)
+            .setTitle(CellRef.key(col, row))
+            .setItems(options) { _, which ->
+                when (options[which]) {
+                    "📷 ছবি যোগ করুন", "📷 ছবি বদলান" -> pickImageLauncher.launch(arrayOf("image/*"))
+                    "🗑 ছবি মুছুন" -> {
+                        pushUndo()
+                        cell.image = null
+                        grid.clearImageCache()
+                        grid.refresh()
+                    }
+                    else -> {
+                        pushUndo()
+                        cell.raw = ""
+                        grid.refresh()
+                        syncFormulaBar()
+                    }
+                }
+            }
+            .show()
+    }
+
+    /** Copies the picked image inside the workbook folder and attaches it to the cell. */
+    private fun insertImageAt(uri: Uri, col: Int, row: Int) {
+        try {
+            val imgs = Docs.imagesDir(docDir)
+            val name = "img_${System.currentTimeMillis()}.jpg"
+            val target = File(imgs, name)
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(target).use { output -> input.copyTo(output) }
+            }
+            pushUndo()
+            workbook.active().cell(col, row).image = name
+            grid.clearImageCache()
+            grid.refresh()
+            Toast.makeText(this, "ছবি যোগ হয়েছে", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "ছবি যোগ করা যায়নি: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -279,6 +425,7 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
         sheet.set(grid.selectedCol, grid.selectedRow, formulaEdit.text.toString())
         grid.refresh()
         hideKeyboard()
+        saveNow()
     }
 
     private fun hideKeyboard() {

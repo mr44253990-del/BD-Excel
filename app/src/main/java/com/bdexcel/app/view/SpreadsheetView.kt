@@ -27,6 +27,7 @@ class SpreadsheetView @JvmOverloads constructor(
         fun onCellTapped(col: Int, row: Int)
         fun onCellEditRequested(col: Int, row: Int)
         fun onSelectionChanged(col: Int, row: Int)
+        fun onCellLongPress(col: Int, row: Int) {}
     }
 
     var listener: Listener? = null
@@ -83,6 +84,10 @@ class SpreadsheetView @JvmOverloads constructor(
     private var velocity: android.view.VelocityTracker? = null
     private var flingOnZoom = false
 
+    /** Folder that stores cell images for the current workbook. */
+    var imageDir: java.io.File? = null
+    private val imageCache = HashMap<String, android.graphics.Bitmap?>()
+
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             val f = detector.scaleFactor
@@ -136,15 +141,20 @@ class SpreadsheetView @JvmOverloads constructor(
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
             scroller.forceFinished(true)
+            // Velocity sign: finger moving right => vx>0; content must keep moving right,
+            // so pan grows in the direction of the finger velocity (NOT inverted).
             scroller.fling(
                 panX.toInt(), panY.toInt(),
-                -vx.toInt(), -vy.toInt(),
+                vx.toInt(), vy.toInt(),
                 minX().toInt(), 0,
                 minY().toInt(), 0
             )
-            flingOnZoom = true
             postInvalidateOnAnimation()
             return true
+        }
+
+        override fun onLongPress(e: MotionEvent) {
+            hitTest(e.x, e.y)?.let { (c, r) -> listener?.onCellLongPress(c, r) }
         }
     })
 
@@ -258,6 +268,9 @@ class SpreadsheetView @JvmOverloads constructor(
                 if (c == selectedCol && r == selectedRow) {
                     canvas.drawRect(x, y, x + colWidth, y + rowHeight, selectionFill)
                 }
+                if (cell.image != null) {
+                    drawCellImage(canvas, cell.image!!, x, y)
+                }
                 val text = calc?.displayFor(c, r) ?: cell.raw
                 if (text.isNotEmpty()) {
                     drawCellText(canvas, text, cell.style, x, y)
@@ -322,6 +335,43 @@ class SpreadsheetView @JvmOverloads constructor(
     }
 
     private val textBounds = Rect()
+
+    /** Decodes (and caches) a cell image; returns null when unavailable. */
+    fun imageFor(name: String): android.graphics.Bitmap? {
+        if (imageCache.containsKey(name)) return imageCache[name]
+        val dir = imageDir ?: return null
+        val file = java.io.File(dir, name)
+        val bmp = try {
+            if (file.exists()) {
+                val opts = android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }
+                android.graphics.BitmapFactory.decodeFile(file.absolutePath, opts)
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+        imageCache[name] = bmp
+        return bmp
+    }
+
+    fun clearImageCache() {
+        imageCache.clear()
+    }
+
+    private fun drawCellImage(canvas: Canvas, name: String, x: Float, y: Float) {
+        val bmp = imageFor(name) ?: return
+        val cw = colWidth - 6f * density
+        val ch = rowHeight - 6f * density
+        if (cw <= 0 || ch <= 0) return
+        val scale = minOf(cw / bmp.width, ch / bmp.height)
+        val w = bmp.width * scale
+        val h = bmp.height * scale
+        val left = x + (colWidth - w) / 2
+        val top = y + (rowHeight - h) / 2
+        canvas.save()
+        canvas.clipRect(x, y, x + colWidth, y + rowHeight)
+        canvas.drawBitmap(bmp, null, android.graphics.RectF(left, top, left + w, top + h), fillPaint)
+        canvas.restore()
+    }
 
     private fun drawCellText(canvas: Canvas, text: String, style: CellStyle, x: Float, y: Float) {
         textPaint.textSize = 13f * density * (if (zoom in 0.75f..1.5f) 1f else zoom.coerceIn(0.85f, 1.6f))
