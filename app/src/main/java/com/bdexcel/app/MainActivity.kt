@@ -81,6 +81,11 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
             if (uri != null) exportSheetTo(uri, "json")
         }
 
+    private val exportPngLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+            if (uri != null) exportPngTo(uri)
+        }
+
     // ------------------------- lifecycle -------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -161,6 +166,7 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
         menu.add(0, 7, 6, "Zoom −").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(0, 8, 7, "Zoom reset").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(0, 9, 8, "About").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(0, 10, 9, "Save as image (PNG)").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         return true
     }
 
@@ -175,6 +181,7 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
             7 -> grid.zoomTo(grid.zoom / 1.25f)
             8 -> grid.zoomTo(1f)
             9 -> showAbout()
+            10 -> exportPngLauncher.launch("bdexcel_${XlsxCodec.timestamp()}.png")
         }
         return super.onOptionsItemSelected(item)
     }
@@ -243,6 +250,18 @@ class MainActivity : AppCompatActivity(), SpreadsheetView.Listener {
             Toast.makeText(this, "Saved successfully", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Save failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** Saves the visible grid view as a PNG photo. */
+    private fun exportPngTo(uri: Uri) {
+        try {
+            contentResolver.openOutputStream(uri, "w")?.use { out ->
+                grid.captureBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+            }
+            Toast.makeText(this, "Image saved as PNG", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Image save failed: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 

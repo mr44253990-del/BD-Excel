@@ -177,6 +177,16 @@ class SpreadsheetView @JvmOverloads constructor(
         invalidate()
     }
 
+    /** Captures the currently visible grid as a bitmap (for image export). */
+    fun captureBitmap(): android.graphics.Bitmap {
+        val w = max(1, width)
+        val h = max(1, height)
+        val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        draw(canvas)
+        return bitmap
+    }
+
     private fun minX(): Float = min(0f, width - headerWidth - contentWidth())
     private fun minY(): Float = min(0f, height - headerHeight - contentHeight())
     private fun contentWidth(): Float = (sheet?.colCount ?: 26) * colWidth
