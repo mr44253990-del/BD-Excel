@@ -27,7 +27,7 @@
         android:background="#F4F6F5">
 
         <ImageButton
-            android:id="+id/btnUndo"
+            android:id="@+id/btnUndo"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -35,7 +35,7 @@
             android:contentDescription="@string/undo" />
 
         <ImageButton
-            android:id="+id/btnRedo"
+            android:id="@+id/btnRedo"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -43,7 +43,7 @@
             android:contentDescription="@string/redo" />
 
         <TextView
-            android:id="+id/btnBold"
+            android:id="@+id/btnBold"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:gravity="center"
@@ -54,7 +54,7 @@
             android:textColor="#202124" />
 
         <TextView
-            android:id="+id/btnItalic"
+            android:id="@+id/btnItalic"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:gravity="center"
@@ -65,7 +65,7 @@
             android:textColor="#202124" />
 
         <ImageView
-            android:id="+id/btnTextColor"
+            android:id="@+id/btnTextColor"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
@@ -74,7 +74,7 @@
             android:contentDescription="Text color" />
 
         <ImageView
-            android:id="+id/btnFillColor"
+            android:id="@+id/btnFillColor"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
@@ -83,7 +83,7 @@
             android:contentDescription="Fill color" />
 
         <TextView
-            android:id="+id/btnAlign"
+            android:id="@+id/btnAlign"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:gravity="center"
@@ -93,7 +93,7 @@
             android:textColor="#202124" />
 
         <ImageButton
-            android:id="+id/btnInsertRow"
+            android:id="@+id/btnInsertRow"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -101,7 +101,7 @@
             android:contentDescription="Insert row" />
 
         <ImageButton
-            android:id="+id/btnDeleteRow"
+            android:id="@+id/btnDeleteRow"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -109,7 +109,7 @@
             android:contentDescription="Delete row" />
 
         <ImageButton
-            android:id="+id/btnInsertCol"
+            android:id="@+id/btnInsertCol"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -117,7 +117,7 @@
             android:contentDescription="Insert column" />
 
         <ImageButton
-            android:id="+id/btnDeleteCol"
+            android:id="@+id/btnDeleteCol"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
