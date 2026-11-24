@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BD Excel</string>
+    <string name="menu_new">New</string>
+    <string name="menu_open">Open</string>
+    <string name="menu_save">Save</string>
+    <string name="menu_export_csv">Export CSV</string>
+    <string name="menu_export_xlsx">Export XLSX</string>
+    <string name="menu_import">Import</string>
+    <string name="bold">B</string>
+    <string name="italic">I</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+</resources>

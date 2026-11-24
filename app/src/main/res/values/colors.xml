@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bd_green">#006A4E</color>
+    <color name="bd_red">#F42A41</color>
+    <color name="grid_line">#D8D8D8</color>
+    <color name="header_bg">#EEF2F0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

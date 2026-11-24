@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BDExcel" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/bd_green</item>
+        <item name="colorPrimaryVariant">@color/bd_green</item>
+        <item name="colorSecondary">@color/bd_red</item>
+        <item name="android:statusBarColor">@color/bd_green</item>
+    </style>
+</resources>
