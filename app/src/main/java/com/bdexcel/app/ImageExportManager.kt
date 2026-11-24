@@ -51,8 +51,8 @@ class ImageExportManager(private val activity: Activity) {
         textPaint.textSize = 18f
         textPaint.color = Color.BLACK
 
-        val colW = width.coerceAtLeast(1) / sheet.columnCount.coerceAtLeast(1)
-        val rowH = height.coerceAtLeast(1) / sheet.rowCount.coerceAtLeast(1)
+        val colW = width.toFloat().coerceAtLeast(1f) / sheet.columnCount.coerceAtLeast(1).toFloat()
+        val rowH = height.toFloat().coerceAtLeast(1f) / sheet.rowCount.coerceAtLeast(1).toFloat()
 
         // গ্রিড লাইন
         paint.color = Color.LTGRAY

@@ -50,7 +50,6 @@ class SheetView @JvmOverloads constructor(
     private val defaultColWidth = 100f
     private val defaultRowHeight = 40f
 
-    private val clickListener: ((CellCoordinate) -> Unit)? = null
     var onCellClick: ((CellCoordinate) -> Unit)? = null
     var onCellLongClick: ((CellCoordinate) -> Boolean)? = null
 
