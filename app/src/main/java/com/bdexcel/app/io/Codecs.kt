@@ -268,7 +268,8 @@ object XlsxCodec {
                 if (st.bold) sb.append("<b/>")
                 if (st.italic) sb.append("<i/>")
                 sb.append("""<sz val="11"/>""")
-                if (st.textColor != null) sb.append("""<color rgb="${argb(st.textColor)}"/>""") else sb.append("""<color theme="1"/>""")
+                val tColor = st.textColor
+                if (tColor != null) sb.append("""<color rgb="${argb(tColor)}"/>""") else sb.append("""<color theme="1"/>""")
                 sb.append("""<name val="Calibri"/><family val="2"/></font>""")
             }
             sb.append("</fonts>")
